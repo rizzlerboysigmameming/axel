@@ -1,7 +1,7 @@
 let scene, camera, renderer;
 let axel, echo;
 
-/* ---------------- WORLD ---------------- */
+/* ---------------- WORLD SETUP ---------------- */
 
 function init() {
   scene = new THREE.Scene();
@@ -20,10 +20,13 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   document.body.appendChild(renderer.domElement);
 
-  // LIGHT
-  const light = new THREE.PointLight(0xffffff, 1);
+  // LIGHTING
+  const light = new THREE.PointLight(0xffffff, 1.5);
   light.position.set(5, 5, 5);
   scene.add(light);
+
+  const ambient = new THREE.AmbientLight(0x404040, 1);
+  scene.add(ambient);
 
   createAxel();
   loadEcho();
@@ -70,14 +73,21 @@ function createAxel() {
 function loadEcho() {
   const loader = new THREE.GLTFLoader();
 
-  loader.load("assets/models/echo.glb", (gltf) => {
-    echo = gltf.scene;
+  loader.load(
+    "assets/echo.glb",
+    (gltf) => {
+      echo = gltf.scene;
 
-    echo.scale.set(0.5, 0.5, 0.5);
-    echo.position.set(2, 0, 0);
+      echo.scale.set(0.5, 0.5, 0.5);
+      echo.position.set(2, 0, 0);
 
-    scene.add(echo);
-  });
+      scene.add(echo);
+    },
+    undefined,
+    (err) => {
+      console.error("Echo failed to load:", err);
+    }
+  );
 }
 
 /* ---------------- AXEL AI BRAIN ---------------- */
@@ -90,7 +100,7 @@ function getAxelResponse(input) {
   }
 
   if (input.includes("who are you")) {
-    return "I AM AXEL. I RUN THIS SIMULATION.";
+    return "I AM AXEL. I CONTROL THIS SIMULATION.";
   }
 
   if (input.includes("echo")) {
@@ -119,12 +129,12 @@ function sendPrompt() {
 
   console.log("AXEL:", response);
 
-  // AXEL reaction
+  // Axel reaction
   if (axel) {
     axel.rotation.y += 0.5;
   }
 
-  // ECHO reaction
+  // Echo reaction
   if (echo && input.includes("scan")) {
     echo.position.x = Math.random() * 4 - 2;
   }
@@ -141,8 +151,8 @@ function animate() {
     axel.position.y = Math.sin(Date.now() * 0.0015) * 0.2;
   }
 
-  // ECHO follow + drift motion
-  if (echo && axel) {
+  // ECHO follow motion
+  if (axel && echo) {
     echo.position.x += (axel.position.x - echo.position.x) * 0.02;
     echo.position.y = Math.sin(Date.now() * 0.002) * 0.3;
   }
